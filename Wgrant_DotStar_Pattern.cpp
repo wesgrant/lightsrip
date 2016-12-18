@@ -6,13 +6,20 @@
 #include <Wire.h>
 #include "Adafruit_MCP23017.h"
 
-Wgrant_DotStar_Pattern::Wgrant_DotStar_Pattern(Adafruit_DotStar *strip, int pixel_count, int width, int strip_brightness, Wgrant_Lcd *lcd)
-{
+Wgrant_DotStar_Pattern::Wgrant_DotStar_Pattern(
+  Adafruit_DotStar *strip, 
+  int pixel_count, 
+  int width, 
+  int strip_brightness, 
+  Wgrant_Lcd *lcd, 
+  unsigned long program_time
+  ) {
   _strip = strip;
   _pixel_count = pixel_count;
   _width = width;
   _strip_brightness = strip_brightness;
   _lcd = lcd;
+  _program_time = program_time;
 }
 
 void Wgrant_DotStar_Pattern::begin() {
@@ -25,54 +32,83 @@ void Wgrant_DotStar_Pattern::begin() {
   _lcd->print(1, "Brightness = " + (String)_strip_brightness);
 }
 
-bool Wgrant_DotStar_Pattern::antsMarching(int width, bool reverse, bool sweep, int del) {
-  static int j = reverse ? width : 0;
+bool Wgrant_DotStar_Pattern::all() {
+  static unsigned long program_start_time = millis();
+  unsigned long time_delta = millis() - program_start_time;
+  
+  if(time_delta < _program_time) antsMarching();
+  else if(time_delta < _program_time * 2) antsRetreating();
+  else if(time_delta < _program_time * 3) runningDot();
+  else if(time_delta < _program_time * 4) christmasCane();
+  else if(time_delta < _program_time * 5) christmasSweep();
+  else if(time_delta < _program_time * 8) christmasSquares();
+  else if(time_delta < _program_time * 9 - _program_time / 2) lightningFlashes();
+  else if(time_delta < _program_time * 20) randomDots();
+  else program_start_time = millis();
+}
+
+bool Wgrant_DotStar_Pattern::antsMarching() {
+  static int j = 0;
+  static int del = 0;
   uint32_t color1 = 0xFF0000, color2 = 0x002200;
   
   _lcd->print(0, "Ants Marching");
 
   for(int i = 0; i < _pixel_count + 1; i++) {
-    if(i % width == j) {
-      if(reverse) {
-        _strip->setPixelColor(i, color1);
-        _strip->setPixelColor(i + 1, color2);
-      } else {
-        _strip->setPixelColor(i, color1);
-        _strip->setPixelColor(i - 1, color2);
-      }
+    if(i % _width == j) {      
+      _strip->setPixelColor(i, color1);
+      _strip->setPixelColor(i - 1, color2);
     }
   }
   _strip->show();
   
-  if(sweep) delay(del + j); else delay(del);
+  delay(del + j); 
   
-  if(reverse) {
-    j--;
-    if(j < 0) j = width; 
-  }  else {
-    j++;
-    if(j > width) j = 0;
-  }
+  j++;
+  if(j > _width) j = 0;
 
   return j == 0;
 }
 
-bool Wgrant_DotStar_Pattern::christmasCane(int width, int del) {
+bool Wgrant_DotStar_Pattern::antsRetreating() {
+  static int j = _width;
+  static int del = 0;
+  uint32_t color1 = 0xFF0000, color2 = 0x002200;
+  
+  _lcd->print(0, "Ants Retreating");
+
+  for(int i = 0; i < _pixel_count + 1; i++) {
+    if(i % _width == j) {
+      _strip->setPixelColor(i, color1);
+      _strip->setPixelColor(i + 1, color2);
+    }
+  }
+  _strip->show();
+  delay(del);
+  
+  j--;
+  if(j < 0) j = _width; 
+  
+  return j == 0;
+}
+
+bool Wgrant_DotStar_Pattern::christmasCane() {
   static int j = 0;
+  static int del = 0;
   static bool directionUp = true;
   uint32_t color1 = 0x00FF00, color2 = 0xFF0000;
 
   _lcd->print(0, "Christmas Cane");
 
   for(int i = 0; i < _pixel_count; i++) {
-    if(i % width == j) _strip->setPixelColor(i, directionUp ? color1 : color2);
+    if(i % _width == j) _strip->setPixelColor(i, directionUp ? color1 : color2);
   }
   _strip->show();
   delay(del + j);
   
   j = (directionUp ? j + 1 : j - 1);
 
-  if(j == 0 || j ==  width) directionUp = !directionUp;
+  if(j == 0 || j ==  _width) directionUp = !directionUp;
   return j == 0;
 }
 
@@ -123,8 +159,9 @@ bool Wgrant_DotStar_Pattern::christmasSweep() {
   return j == 0;
 }
 
-bool Wgrant_DotStar_Pattern::lightningFlashes(int flashes) {
+bool Wgrant_DotStar_Pattern::lightningFlashes() {
   static int j = 0;
+  static int flashes = 3;
 
   _lcd->print(0, "Lightning Flash");
 
@@ -148,28 +185,10 @@ bool Wgrant_DotStar_Pattern::lightningFlashes(int flashes) {
 
 bool Wgrant_DotStar_Pattern::randomDots() {
   static int i;  // so we can give some concept of 'done'
-  uint32_t colors[] = {
-    // 0xFF0000,
-    // 0x110000,
-    // 0x110000,
-    // 0x110000,
-    // 0x110000, 
-    // 0x00FF00,
-    // 0x001100,
-    // 0x001100,
-    // 0x001100,
-    // 0x001100, 
-    // 0x000000,
-    // 0x000000,
-    // 0x000000,
-    // 0x000000,
-    // 0x000000,
-    // 0xFFFFFF,
-    0x0000FF
-  };
-  int sizeOfColors = sizeof(colors) / sizeof(uint32_t);
   int pixel, color;
 
+  _lcd->print(0, "Random Dots");
+  
   pixel = random(0, _pixel_count + 1);
   _strip->setPixelColor(pixel, 0x0000FF);
   for(int j = 0; j <= 74; j++) {
@@ -178,10 +197,8 @@ bool Wgrant_DotStar_Pattern::randomDots() {
     _strip->show();
     delay(5);
   }
-  _lcd->print(0, "Random Dots");
 
-  //_strip->setPixelColor(random(0, _pixel_count + 1), colors[random(0, sizeOfColors + 1)]); 
-  delay(0);
+
   if(i > _pixel_count) i = 0;
   return (i++ == _pixel_count);
 }
