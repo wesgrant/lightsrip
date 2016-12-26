@@ -3,8 +3,6 @@
 
 #include "Arduino.h"
 #include "Adafruit_RGBLCDShield.h"
-#include <Wire.h>
-#include "Adafruit_MCP23017.h"
 
 class Wgrant_Lcd
 {

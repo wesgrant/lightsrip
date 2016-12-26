@@ -1,10 +1,5 @@
-#include "Arduino.h"
 #include "Adafruit_DotStar.h"
-#include <SPI.h>
-#include "Wgrant_Lcd.h"
 #include "Wgrant_DotStar_Pattern.h"
-#include <Wire.h>
-#include "Adafruit_MCP23017.h"
 
 Wgrant_DotStar_Pattern::Wgrant_DotStar_Pattern(
   Adafruit_DotStar *strip, 
@@ -116,7 +111,7 @@ bool Wgrant_DotStar_Pattern::christmasSquares() {
   static int j = 0;
   static bool toggle = true;
 
-  uint32_t color1 = 0x00FF00, color2 = 0xFF0000;
+  uint32_t color1 = 0xFFFFFF, color2 = 0xFF0000;
 
   _lcd->print(0, "Christmas Squares");
 
@@ -126,10 +121,8 @@ bool Wgrant_DotStar_Pattern::christmasSquares() {
   }
   _strip->show();
   delay(50);
-  
-  //j = (directionUp ? j + 1 : j - 1);
-  j++;
 
+  j++;
   if(j == _width) {
     toggle = !toggle;
     j = 0;
@@ -191,14 +184,12 @@ bool Wgrant_DotStar_Pattern::randomDots() {
   
   pixel = random(0, _pixel_count + 1);
   _strip->setPixelColor(pixel, 0x0000FF);
+  _strip->show();
   for(int j = 0; j <= 74; j++) {
-    color = 0x0000FF ;
     _strip->setPixelColor(pixel, 0x00004B - j);
     _strip->show();
     delay(5);
   }
-
-
   if(i > _pixel_count) i = 0;
   return (i++ == _pixel_count);
 }

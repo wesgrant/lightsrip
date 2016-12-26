@@ -1,8 +1,4 @@
-
-#include "Arduino.h"
 #include "Wgrant_Lcd.h"
-#include <Wire.h>
-#include "Adafruit_MCP23017.h"
 
 Wgrant_Lcd::Wgrant_Lcd(Adafruit_RGBLCDShield *lcd) {
     _lcd = lcd;

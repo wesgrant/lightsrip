@@ -3,10 +3,7 @@
 
 #include "Arduino.h"
 #include "Adafruit_DotStar.h"
-#include <SPI.h>
 #include "Wgrant_Lcd.h"
-#include <Wire.h>
-#include "Adafruit_MCP23017.h"
 
 class Wgrant_DotStar_Pattern
 {
